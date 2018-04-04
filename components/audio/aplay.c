@@ -517,8 +517,15 @@ void task_aplay_speak()
 				}
 				else
 				{
-					//阻塞
-					xQueueReceive(queAplaySpeadData, NULL, portMAX_DELAY);
+					if(queAplaySpeadData)
+					{
+						//阻塞
+						xQueueReceive(queAplaySpeadData, NULL, portMAX_DELAY);
+					}
+					else
+					{
+						vTaskDelay(100 / portTICK_PERIOD_MS);
+					}
 				}
 			}
 		}
@@ -572,7 +579,10 @@ void speaker_begin()
 	}
 	//ESP_LOGI("speaker_begin","speaker_begin\n");
 	g_isSpeaking=true;
-	xQueueSend(queAplaySpeadData, NULL, 0);
+	if(queAplaySpeadData)
+	{
+		xQueueSend(queAplaySpeadData, NULL, 0);
+	}
 }
 void speaker_end()
 {

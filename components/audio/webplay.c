@@ -90,7 +90,6 @@ void webplay_task_mp3()
 			ESP_LOGE(TAG,"nserepos=%d totalByte=%d read_pos=%d ",nserepos,totalByte,read_pos);
 			while ( g_webplay_ing)
 			{
-				
 				if (bytesLeft < MAINBUF_SIZE)
 				{
 						if(bytesLeft>0)
@@ -150,7 +149,7 @@ ESP_LOGI(TAG,"mp3file info---bitrate=%d, bitsPerSample =%d,layer=%d,nChans=%d,sa
 		free(readBuf);
 		free(output);  
 
-		//ESP_LOGI(TAG,"end mp3 decode ..");
+		ESP_LOGI(TAG,"end mp3 decode ..");
 		g_webplay_ing=false;
 	}
 	else
@@ -168,6 +167,7 @@ void webplay_push_data(char*buf,int len)
 }
 void webplay_stop_mp3()
 {
+	spiRamFifoFree();
 	g_webplay_ing=false;
 	vTaskDelay(400 / portTICK_PERIOD_MS);
 }

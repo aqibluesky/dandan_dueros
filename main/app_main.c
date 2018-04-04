@@ -164,7 +164,8 @@ void btn_press(int gpio_num, int is_press)
 		{
 		    static int snd_doudong=0; 
 		    if(1==is_press)
-		    {
+		    {				
+				webplay_stop_mp3();
 		        aplay_end();
 		        speaker_begin();
 		        snd_doudong=0;
@@ -258,10 +259,10 @@ void app_main()
     event_engine_init();
     h_gpio_init(btn_press);	
     aplay_init(AUDIO_PLAY_CALLBACK , AUDIO_SPEAK_CALLBACK);
-	xTaskCreate(webplay_task_mp3, "webplay_task_mp3", 4*1024, "", 5, NULL);
+	xTaskCreate(webplay_task_mp3, "webplay_task_mp3", 4*1024, NULL, 5, NULL);
 	
 	//语音缓冲区
-	g_myVopBuf=pvPortMallocCaps(800*1024, MALLOC_CAP_SPIRAM);
+	g_myVopBuf=pvPortMallocCaps(500*1024, MALLOC_CAP_SPIRAM);
 
     app_wifi_sta("hx-kong.com","89918000");
     
