@@ -271,8 +271,8 @@ void _zhHttpThread_Data(TzhHttpThread* p)
 	case 1://get模式
 		{
 			//提交HTTP头
-			char buf[2048]={0};
-			char tmp[256];
+			char buf[1024]={0};
+			char tmp[160]={0};
 			sprintf(tmp,"GET %s?%s HTTP/1.1\r\n",p->file,p->parameter);
 			strcat(buf,tmp);
 			sprintf(tmp,"Accept: */*\r\n");
@@ -297,8 +297,8 @@ void _zhHttpThread_Data(TzhHttpThread* p)
 	case 2://post模式
 		{
 			//提交HTTP头
-			char buf[2048]={0};
-			char tmp[256];
+			char buf[1024]={0};
+			char tmp[160]={0};
 			int send_len;
 			int send_pos;
 
@@ -517,8 +517,8 @@ void _zhHttpThread_Head(TzhHttpThread* p)
 		case 4://header模式
 		{
 			//提交HTTP头
-			char buf[2048]={0};
-			char tmp[256];
+			char buf[1024]={0};
+			char tmp[160]={0};
 
 			sprintf(tmp,"HEAD %s HTTP/1.1\r\n",p->file);
 			strcat(buf,tmp);
@@ -584,9 +584,9 @@ void _zhHttpThread_Head(TzhHttpThread* p)
 				}
 				if(jmp)
 				{
-					char a[50]={0};
-					char b[50]={0};
-					char c[50]={0};
+					char a[30]={0};
+					char b[30]={0};
+					char c[30]={0};
 					sscanf(cache_buf,"%s %s %s",a,b,c);
 					if(0==strcmp("200",b) || 0==strcmp("206",b))
 					{

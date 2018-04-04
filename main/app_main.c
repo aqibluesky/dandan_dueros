@@ -17,7 +17,7 @@
 #include "webplay.h"
 //-------------------------
 //播放音乐的路径
-char g_payloadurl[255]={0};
+char g_payloadurl[128]={0};
 char *g_myVopBuf=NULL;
 int g_myVopBufLen=0;
 
@@ -49,7 +49,7 @@ void httpCallBack_tsn(EzhHttpOperat operat,
 	case ezhHttpOperatFinish:
 		{
 			//printf("http---tsn----------Finish\r\n");
-			aplay_begin_spiram();
+			_aplay_spiram_mp3();
 		}
 		break;
 	case ezhHttpOperatGetSize:
@@ -154,7 +154,6 @@ void btn_press(int gpio_num, int is_press)
 							//-------------------
 							//
 							//-------------------
-							//°ŽŒüžŽÎ»
 							is_long_press_ok=0;
 							cur_press_cacal=0;
 						}
@@ -241,7 +240,7 @@ void DUEROS_PLAY_CALLBACK (char* url,char*text,char *payload)
   }
   if(text)
   {
-      char gb2312Buf[512]={0};
+      char gb2312Buf[128]={0};
       Utf8ToGb2312(text,strlen(text),gb2312Buf);
       printf("\r\n播放内容-->%s \r\n",gb2312Buf);
   }
@@ -258,12 +257,11 @@ void app_main()
     tcpip_adapter_init();
     event_engine_init();
     h_gpio_init(btn_press);	
-    spiRamFifoInit();
     aplay_init(AUDIO_PLAY_CALLBACK , AUDIO_SPEAK_CALLBACK);
-	xTaskCreate(webplay_task_mp3, "webplay_task_mp3", 7*1024, "", 5, NULL);
+	xTaskCreate(webplay_task_mp3, "webplay_task_mp3", 4*1024, "", 5, NULL);
 	
 	//语音缓冲区
-	g_myVopBuf=pvPortMallocCaps(300*1024, MALLOC_CAP_SPIRAM);
+	g_myVopBuf=pvPortMallocCaps(800*1024, MALLOC_CAP_SPIRAM);
 
     app_wifi_sta("hx-kong.com","89918000");
     
@@ -271,7 +269,7 @@ void app_main()
 	vTaskDelay(5000 / portTICK_PERIOD_MS);
     /* Duer OS voice recognition*/
     initDuerOS(DUEROS_PLAY_CALLBACK);
-	//
+	//xTaskCreate(task_url_music, "task_url_music", 7*1024, "http://res.iot.baidu.com/api/v1/voice/0f6c000000000a/tts/2be183c35d9b68c3ac48971019a67eb3.mp3", 6, NULL);
 	vTaskSuspend(NULL);
 }
 

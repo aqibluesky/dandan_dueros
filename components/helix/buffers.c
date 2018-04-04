@@ -49,6 +49,10 @@
 #include "stdlib.h" // J.Sz. 21/04/2006
 #include "coder.h"
 
+//--------------
+//平台支持
+#include "esp_heap_alloc_caps.h"
+
 /**************************************************************************************
  * Function:    ClearBuffer
  *
@@ -101,7 +105,8 @@ MP3DecInfo *AllocateBuffers(void)
 	IMDCTInfo *mi;
 	SubbandInfo *sbi;
 
-	mp3DecInfo = (MP3DecInfo *)malloc(sizeof(MP3DecInfo));
+	//mp3DecInfo = (MP3DecInfo *)malloc(sizeof(MP3DecInfo));
+	mp3DecInfo = (MP3DecInfo *)pvPortMallocCaps(sizeof(MP3DecInfo), MALLOC_CAP_SPIRAM);
 	if (!mp3DecInfo)
 		return 0;
 	ClearBuffer(mp3DecInfo, sizeof(MP3DecInfo));

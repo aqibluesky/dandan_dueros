@@ -556,7 +556,6 @@ void aplay_begin_spiram()
 	aplay_begin("***SPIRAM***");
 }
 
-
 void aplay_end()
 {
 	ESP_LOGI("aplay_end","g_aplay_ing=%d\n",g_aplay_ing);

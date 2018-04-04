@@ -22,24 +22,25 @@ void webplay_begin_mp3()
 }
 void webplay_task_mp3()
 {
+    spiRamFifoInit();
 	while(1)
-	if(spiRamFifoFill()>100*1024)
+	if(spiRamFifoFill()>1024)
 	{
 			//
 			ESP_LOGI(TAG,"start to decode . spiRAM mp3");
 			HMP3Decoder hMP3Decoder;
 			MP3FrameInfo mp3FrameInfo;
-			unsigned char *cacheReadBuf=malloc(MAINBUF_SIZE);
+			unsigned char *cacheReadBuf=pvPortMallocCaps(MAINBUF_SIZE, MALLOC_CAP_SPIRAM);
 			if(cacheReadBuf==NULL){
 				ESP_LOGE(TAG,"cacheReadBuf malloc failed");
 				return;
 			}
-			unsigned char *readBuf=malloc(MAINBUF_SIZE);
+			unsigned char *readBuf=pvPortMallocCaps(MAINBUF_SIZE, MALLOC_CAP_SPIRAM);
 			if(readBuf==NULL){
 				ESP_LOGE(TAG,"readBuf malloc failed");
 				return;
 			}
-			short *output=malloc(1200*4);
+			short *output=pvPortMallocCaps(4800, MALLOC_CAP_SPIRAM);
 			if(output==NULL){
 				free(readBuf);
 				ESP_LOGE(TAG,"outBuf malloc failed");
@@ -60,7 +61,7 @@ void webplay_task_mp3()
 			int read_pos =0;
 			char tag[10];
 			int tag_len = 0;
-			spiRamFifoRead((char*)cacheReadBuf,MAINBUF_SIZE);
+			spiRamFifoRead((char*)cacheReadBuf,1024);
 			memcpy(tag,cacheReadBuf,10);
 
 			if (memcmp(tag,"ID3",3) == 0) 
@@ -70,7 +71,7 @@ void webplay_task_mp3()
 				ESP_LOGI(TAG,"read_pos=%d , tag_len: %d %x %x %x %x", read_pos , tag_len,tag[6],tag[7],tag[8],tag[9]);
 			}
 
-			int totalByte=MAINBUF_SIZE;
+			int totalByte=1024;
 			int bytesLeft =0 ;
 			unsigned char* readPtr = readBuf;
 			int nserepos=read_pos;
@@ -120,7 +121,6 @@ void webplay_task_mp3()
 				{
 					readPtr += offset;                   //data start point
 					bytesLeft -= offset;                 //in buffer
-			
 					int errs = MP3Decode(hMP3Decoder, &readPtr, &bytesLeft, output, 0);
 					if (errs != 0)
 					{
