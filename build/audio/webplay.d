@@ -100,7 +100,42 @@ webplay.o: /home/hzh/桌面/蛋蛋小语音/components/audio/./webplay.c \
  /opt/esp-idf/components/driver/include/driver/uart.h \
  /opt/esp-idf/components/soc/esp32/include/soc/uart_reg.h \
  /opt/esp-idf/components/soc/esp32/include/soc/uart_struct.h \
- /home/hzh/桌面/蛋蛋小语音/components/audio/include/spiram_fifo.h
+ /home/hzh/桌面/蛋蛋小语音/components/audio/include/spiram_fifo.h \
+ /home/hzh/桌面/蛋蛋小语音/components/http/include/zhHttp.h \
+ /home/hzh/桌面/蛋蛋小语音/components/http/include/zhsock.h \
+ /opt/esp-idf/components/lwip/include/lwip/posix/sys/socket.h \
+ /opt/esp-idf/components/lwip/include/lwip/lwip/sockets.h \
+ /opt/esp-idf/components/lwip/include/lwip/lwip/opt.h \
+ /opt/esp-idf/components/lwip/include/lwip/port/lwipopts.h \
+ /opt/esp-idf/components/newlib/include/sys/time.h \
+ /opt/esp-idf/components/newlib/include/sys/fcntl.h \
+ /opt/esp-idf/components/newlib/include/sys/_default_fcntl.h \
+ /opt/esp-idf/components/esp32/include/esp_task.h \
+ /opt/esp-idf/components/lwip/include/lwip/lwip/debug.h \
+ /opt/esp-idf/components/lwip/include/lwip/lwip/arch.h \
+ /opt/esp-idf/components/lwip/include/lwip/port/arch/cc.h \
+ /opt/esp-idf/components/newlib/include/errno.h \
+ /opt/esp-idf/components/newlib/include/sys/errno.h \
+ /opt/esp-idf/components/lwip/include/lwip/port/arch/sys_arch.h \
+ /opt/esp-idf/components/lwip/include/lwip/lwip/ip_addr.h \
+ /opt/esp-idf/components/lwip/include/lwip/lwip/def.h \
+ /opt/esp-idf/components/lwip/include/lwip/lwip/ip4_addr.h \
+ /opt/esp-idf/components/lwip/include/lwip/lwip/ip6_addr.h \
+ /opt/esp-idf/components/lwip/include/lwip/lwip/err.h \
+ /opt/esp-idf/components/lwip/include/lwip/lwip/inet.h \
+ /opt/esp-idf/components/freertos/include/freertos/event_groups.h \
+ /opt/esp-idf/components/freertos/include/freertos/timers.h \
+ /opt/esp-idf/components/freertos/include/freertos/task.h \
+ /opt/esp-idf/components/esp32/include/esp_wifi.h \
+ /opt/esp-idf/components/esp32/include/rom/queue.h \
+ /opt/esp-idf/components/esp32/include/esp_wifi_types.h \
+ /opt/esp-idf/components/esp32/include/esp_interface.h \
+ /opt/esp-idf/components/esp32/include/esp_event.h \
+ /opt/esp-idf/components/tcpip_adapter/include/tcpip_adapter.h \
+ /opt/esp-idf/components/esp32/include/rom/queue.h \
+ /opt/esp-idf/components/esp32/include/esp_wifi_types.h \
+ /opt/esp-idf/components/lwip/include/lwip/apps/dhcpserver.h \
+ /opt/esp-idf/components/esp32/include/esp_event_loop.h
 
 /opt/esp-idf/components/log/include/esp_log.h:
 
@@ -305,3 +340,73 @@ webplay.o: /home/hzh/桌面/蛋蛋小语音/components/audio/./webplay.c \
 /opt/esp-idf/components/soc/esp32/include/soc/uart_struct.h:
 
 /home/hzh/桌面/蛋蛋小语音/components/audio/include/spiram_fifo.h:
+
+/home/hzh/桌面/蛋蛋小语音/components/http/include/zhHttp.h:
+
+/home/hzh/桌面/蛋蛋小语音/components/http/include/zhsock.h:
+
+/opt/esp-idf/components/lwip/include/lwip/posix/sys/socket.h:
+
+/opt/esp-idf/components/lwip/include/lwip/lwip/sockets.h:
+
+/opt/esp-idf/components/lwip/include/lwip/lwip/opt.h:
+
+/opt/esp-idf/components/lwip/include/lwip/port/lwipopts.h:
+
+/opt/esp-idf/components/newlib/include/sys/time.h:
+
+/opt/esp-idf/components/newlib/include/sys/fcntl.h:
+
+/opt/esp-idf/components/newlib/include/sys/_default_fcntl.h:
+
+/opt/esp-idf/components/esp32/include/esp_task.h:
+
+/opt/esp-idf/components/lwip/include/lwip/lwip/debug.h:
+
+/opt/esp-idf/components/lwip/include/lwip/lwip/arch.h:
+
+/opt/esp-idf/components/lwip/include/lwip/port/arch/cc.h:
+
+/opt/esp-idf/components/newlib/include/errno.h:
+
+/opt/esp-idf/components/newlib/include/sys/errno.h:
+
+/opt/esp-idf/components/lwip/include/lwip/port/arch/sys_arch.h:
+
+/opt/esp-idf/components/lwip/include/lwip/lwip/ip_addr.h:
+
+/opt/esp-idf/components/lwip/include/lwip/lwip/def.h:
+
+/opt/esp-idf/components/lwip/include/lwip/lwip/ip4_addr.h:
+
+/opt/esp-idf/components/lwip/include/lwip/lwip/ip6_addr.h:
+
+/opt/esp-idf/components/lwip/include/lwip/lwip/err.h:
+
+/opt/esp-idf/components/lwip/include/lwip/lwip/inet.h:
+
+/opt/esp-idf/components/freertos/include/freertos/event_groups.h:
+
+/opt/esp-idf/components/freertos/include/freertos/timers.h:
+
+/opt/esp-idf/components/freertos/include/freertos/task.h:
+
+/opt/esp-idf/components/esp32/include/esp_wifi.h:
+
+/opt/esp-idf/components/esp32/include/rom/queue.h:
+
+/opt/esp-idf/components/esp32/include/esp_wifi_types.h:
+
+/opt/esp-idf/components/esp32/include/esp_interface.h:
+
+/opt/esp-idf/components/esp32/include/esp_event.h:
+
+/opt/esp-idf/components/tcpip_adapter/include/tcpip_adapter.h:
+
+/opt/esp-idf/components/esp32/include/rom/queue.h:
+
+/opt/esp-idf/components/esp32/include/esp_wifi_types.h:
+
+/opt/esp-idf/components/lwip/include/lwip/apps/dhcpserver.h:
+
+/opt/esp-idf/components/esp32/include/esp_event_loop.h:

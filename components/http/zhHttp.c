@@ -248,10 +248,10 @@ void _zhHttpThread_Data(TzhHttpThread* p)
 {
 	int doc_total_len;
 	int connRet;
-	char recv_buf[1024];
+	char recv_buf[128];
 	int recv_len;
 	int recv_total_len;
-	char cache_buf[2050];
+	char cache_buf[1400];
 	int cache_len;
 	char *pSearch;
 	int search_len;
@@ -297,8 +297,8 @@ void _zhHttpThread_Data(TzhHttpThread* p)
 	case 2://post模式
 		{
 			//提交HTTP头
-			char buf[1024]={0};
-			char tmp[160]={0};
+			char buf[512]={0};
+			char tmp[96]={0};
 			int send_len;
 			int send_pos;
 
@@ -491,7 +491,7 @@ _end:
 void _zhHttpThread_Head(TzhHttpThread* p)
 {
 	int connRet;
-	char recv_buf[1024];
+	char recv_buf[128];
 	int recv_len;
 	int doc_total_len;//这里是根据返回来的头确定要接收的长度
 	char cache_buf[1040];
@@ -517,8 +517,8 @@ void _zhHttpThread_Head(TzhHttpThread* p)
 		case 4://header模式
 		{
 			//提交HTTP头
-			char buf[1024]={0};
-			char tmp[160]={0};
+			char buf[512]={0};
+			char tmp[96]={0};
 
 			sprintf(tmp,"HEAD %s HTTP/1.1\r\n",p->file);
 			strcat(buf,tmp);
@@ -528,8 +528,6 @@ void _zhHttpThread_Head(TzhHttpThread* p)
 			strcat(buf,tmp);
 			sprintf(tmp,"Accept-Encoding: gzip, deflate\r\n");
 			strcat(buf,tmp);
-			//sprintf(tmp,"Referer: http://%s%s \r\n",p->host,p->file);
-			//strcat(buf,tmp);
 			sprintf(tmp,"Host: %s:%d\r\n",p->host,p->port);
 			strcat(buf,tmp);
 			sprintf(tmp,"Connection: close\r\n");

@@ -220,9 +220,9 @@ void _aplay_mp3(char *path)
 			 int bytesLeft = 0;
 			 unsigned char* readPtr = readBuf;
 
-			 while ( g_aplay_ing)
+			 while ( 1)
 			 {    
-				 if (bytesLeft < MAINBUF_SIZE)
+				 if (g_aplay_ing && bytesLeft < MAINBUF_SIZE)
 				{
 						if(bytesLeft>0)
 						{
@@ -233,6 +233,10 @@ void _aplay_mp3(char *path)
  
 						bytesLeft = bytesLeft + br;
 						readPtr = readBuf;
+				}
+				else
+				{
+					bytesLeft=0;
 				}
 				int offset = MP3FindSyncWord(readPtr, bytesLeft);
 				if (offset < 0)
@@ -332,9 +336,9 @@ void _aplay_spiram_mp3()
 			 int bytesLeft = 0;
 			 unsigned char* readPtr = readBuf;
 
-			 while ( g_aplay_ing)
+			 while ( 1)
 			 {    
-				if (bytesLeft < MAINBUF_SIZE)
+				if (g_aplay_ing && bytesLeft < MAINBUF_SIZE)
 				{
 						if(bytesLeft>0)
 						{
@@ -352,12 +356,16 @@ void _aplay_spiram_mp3()
 						bytesLeft = bytesLeft + br;
 						readPtr = readBuf;
 				}
+				else
+				{
+					bytesLeft=0;
+				}
 				int offset = MP3FindSyncWord(readPtr, bytesLeft);
 				if (offset < 0)
 				{  
-						 ESP_LOGE(TAG,"MP3FindSyncWord not find");
-						 bytesLeft=0;
-						 continue;
+						ESP_LOGE(TAG,"MP3FindSyncWord not find");
+						bytesLeft=0;
+						break;
 				}
 				else
 				{

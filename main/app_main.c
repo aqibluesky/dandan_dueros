@@ -48,7 +48,7 @@ void httpCallBack_tsn(EzhHttpOperat operat,
 		break;
 	case ezhHttpOperatFinish:
 		{
-			//printf("http---tsn----------Finish\r\n");
+			printf("http---tsn----------Finish\r\n");
 			_aplay_spiram_mp3();
 		}
 		break;
@@ -77,7 +77,7 @@ void httpCallBack_tsn(EzhHttpOperat operat,
 	}
 }
 
-void httpCallBack_music(EzhHttpOperat operat,
+void httpCallBack_music(EzhWebPlayHttpOperat operat,
 						   char*host,
 						   int port,
 						   char*file,
@@ -89,42 +89,34 @@ void httpCallBack_music(EzhHttpOperat operat,
 {
 	switch(operat)
 	{
-	case ezhHttpOperatConnected:
+	case ezhWebPlayConnected:
 		{
-			webplay_begin_mp3();
-			printf("httpCallBack_music----------ezhHttpOperatConnected\n");
+			printf("httpCallBack_music----------ezhWebPlayHttpConnected\n");
 		}
 		break;
-	case ezhHttpOperatGetData:
+	case ezhWebPlayGetData:
 		{
-			printf("httpCallBack_music----------ezhHttpOperatGetData=%d\n",nLen);
-			webplay_push_data(szBuf,nLen);
+			printf("httpCallBack_music----------ezhWebPlayHttpGetData=%d\n",nLen);
 		}
 		break;
-	case ezhHttpOperatFinish:
+	case ezhWebPlayFinish:
 		{
+			printf("httpCallBack_music----------ezhWebPlayHttpFinish\n");
 		}
 		break;
-	case ezhHttpOperatGetSize:
-		break;
-	case ezhHttpOperatRecviceFail:
+	case ezhWebPlayRecviceFail:
 		{
-			printf("httpCallBack_music-------------ezhHttpOperatRecviceFail!\r\n");
+			printf("httpCallBack_music-------------ezhWebPlayHttpRecviceFail!\r\n");
 		}
 		break;
-	case ezhHttpOperatConnectFail:
+	case ezhWebPlayConnectFail:
 		{
 			printf("httpCallBack_music-------------connect server fail!\r\n");
 		}
 		break;
-	case ezhHttpOperatPostFail:
+	case ezhWebPlayInterrupt:
 		{
-			printf("httpCallBack_music-------------ezhHttpOperatPostFail!!\r\n");
-		}
-		break;
-	case ezhHttpOperatPageJump:
-		{
-			printf("httpCallBack_music-------------ezhHttpOperatPageJump!!  szBuf=%s\r\n",szBuf);
+			printf("httpCallBack_music-------------ezhWebPlayPlayInterrupt\r\n");
 		}
 		break;
 	}
@@ -165,10 +157,12 @@ void btn_press(int gpio_num, int is_press)
 		    static int snd_doudong=0; 
 		    if(1==is_press)
 		    {				
-				webplay_stop_mp3();
-		        aplay_end();
-		        speaker_begin();
-		        snd_doudong=0;
+				if(false==webplay_stop_mp3())
+				{
+				    aplay_end();
+				    speaker_begin();
+				    snd_doudong=0;
+				}
 		    }
 		    else
 		    {
@@ -216,7 +210,7 @@ void AUDIO_SPEAK_CALLBACK (APlaySpeakStatus status , const char *buf, int len)
 
 void task_url_music(char * url)
 {
-	zhHttpGet(url,0,httpCallBack_music);
+	webplay_begin_mp3(url,httpCallBack_music);
 	vTaskDelete(NULL);
 }
 
@@ -262,12 +256,12 @@ void app_main()
 	xTaskCreate(webplay_task_mp3, "webplay_task_mp3", 4*1024, NULL, 5, NULL);
 	
 	//语音缓冲区
-	g_myVopBuf=pvPortMallocCaps(500*1024, MALLOC_CAP_SPIRAM);
+	g_myVopBuf=pvPortMallocCaps(600*1024, MALLOC_CAP_SPIRAM);
 
     app_wifi_sta("hx-kong.com","89918000");
     
     
-	vTaskDelay(5000 / portTICK_PERIOD_MS);
+	vTaskDelay(3000 / portTICK_PERIOD_MS);
     /* Duer OS voice recognition*/
     initDuerOS(DUEROS_PLAY_CALLBACK);
 	//xTaskCreate(task_url_music, "task_url_music", 7*1024, "http://res.iot.baidu.com/api/v1/voice/0f6c000000000a/tts/2be183c35d9b68c3ac48971019a67eb3.mp3", 6, NULL);

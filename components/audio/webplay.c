@@ -11,20 +11,231 @@
 #include "assist.h"
 #include "esp_heap_alloc_caps.h"
 #include "spiram_fifo.h"
+#include "zhHttp.h"
 
 bool g_webplay_ing=false;
 #define TAG "webplay"
 
-void webplay_begin_mp3()
+
+
+void webPlayHttpThread_Data(TzhHttpThread* p)
 {
+	int doc_total_len=0;
+	int connRet=0;
+	char recv_buf[1024]={0};//接收数值不能小于1K不然解码会中断
+	int recv_len=0;
+	int recv_total_len=0;
+	char cache_buf[1600]={0};
+	int cache_len=0;
+	char *pSearch=NULL;
+	int search_len=0;
+	char buf[512]={0};
+	char tmp[96]={0};
+
+	connRet=zhSockConnect(p->host,p->port);
+
+	//连接失败
+	if(ESP_FAIL==connRet)
+	{
+		p->pfCallback(ezhWebPlayConnectFail,p->host,p->port,p->file,p->parameter,p->body,p->body_len,NULL,0);
+		goto _end;
+	}
+
+	//连接成功
 	spiRamFifoFree();
 	g_webplay_ing=true;
+	p->pfCallback(ezhWebPlayConnected,p->host,p->port,p->file,p->parameter,p->body,p->body_len,NULL,0);
+
+	//提交HTTP头
+	sprintf(tmp,"GET %s?%s HTTP/1.1\r\n",p->file,p->parameter);
+	strcat(buf,tmp);
+	sprintf(tmp,"Accept: */*\r\n");
+	strcat(buf,tmp);
+	sprintf(tmp,"User-Agent: zhHttp/1.0\r\n");
+	strcat(buf,tmp);
+	sprintf(tmp,"Range: bytes=%u-\r\n",p->beginByte);
+	strcat(buf,tmp);
+	sprintf(tmp,"Accept-Encoding: gzip, deflate\r\n");
+	strcat(buf,tmp);
+	sprintf(tmp,"Host: %s:%d\r\n",p->host,p->port);
+	strcat(buf,tmp);
+	sprintf(tmp,"Connection: close\r\n");
+	strcat(buf,tmp);
+	sprintf(tmp,"\r\n");
+	strcat(buf,tmp);
+	zhSockSend(buf,strlen(buf));
+
+
+	//接收返回来的HTTP协议头
+	doc_total_len=0;
+	cache_len=0;
+	memset(cache_buf,0,sizeof(cache_buf));
+	while(g_webplay_ing)
+	{
+		//这里接收的是cache的缓冲区大小
+		recv_len=zhSockRecv(recv_buf,sizeof(recv_buf));
+		if(recv_len>0)
+		{
+			if(cache_len+recv_len>=sizeof(cache_buf))
+			{
+				p->pfCallback(ezhWebPlayRecviceFail,p->host,p->port,p->file,p->parameter,p->body,p->body_len,NULL,0);
+				goto _end;
+			}
+			//缓存叠加
+			memcpy(&cache_buf[cache_len],recv_buf,recv_len);
+			cache_len+=recv_len;
+			//检测HTTP头协议完整
+			pSearch=cache_buf;
+			search_len=0;
+			while(pSearch[0]!=0)
+			{
+				bool jmp=false;
+				pSearch++;
+				search_len++;
+				//数据正常
+				if(pSearch[0]=='\r' && pSearch[1]=='\n' && pSearch[2]=='\r' && pSearch[3]=='\n')
+				{
+					search_len+=4;
+					jmp=true;
+				}
+				if(pSearch[0]=='\n' && pSearch[1]=='\n')
+				{
+					search_len+=2;
+					jmp=true;
+				}
+				if(jmp)
+				{
+					char a[50]={0};
+					char b[50]={0};
+					char c[50]={0};
+					sscanf(cache_buf,"%s %s %s",a,b,c);
+					if(0==strcmp("200",b) || 0==strcmp("206",b))
+					{
+						//获取数据
+						char value[32]={0};
+						zhHttpGetProtocolValue(cache_buf,"Content-Length",value);
+						doc_total_len=atoi(value);
+						goto _data_ok;
+					}
+					else if(0==strcmp("302",b))
+					{
+						//跳转到其它资源访问
+						char value[168]={0};
+						zhHttpGetProtocolValue(cache_buf,"Location",value);
+						zhSockClose();
+						//解析参数
+						zhHttpUrlSplit(value,p->host,&p->port,p->file,p->parameter);
+						p->method=1;
+						p->body=NULL;
+						p->body_len=0;
+						p->beginByte=0;
+						webPlayHttpThread_Data(p);
+						goto _end;
+					}
+					else
+					{
+						p->pfCallback(ezhWebPlayRecviceFail,p->host,p->port,p->file,p->parameter,p->body,p->body_len,NULL,0);
+						goto _end;
+					}
+				}
+			}
+		}
+		else if(0==recv_len)
+		{
+			p->pfCallback(ezhWebPlayFinish,p->host,p->port,p->file,p->parameter,p->body,p->body_len,NULL,0);
+			goto _end;
+		}
+		else if(-1==recv_len)
+		{
+			p->pfCallback(ezhWebPlayFinish,p->host,p->port,p->file,p->parameter,p->body,p->body_len,NULL,0);
+			goto _end;
+		}
+	}
+
+_data_ok:
+	//将cache除去头部其它的缓冲数据回调到函数里
+	recv_total_len=0;
+	if(cache_len-search_len>0)
+	{
+		p->pfCallback(ezhWebPlayGetData,p->host,p->port,p->file,p->parameter,p->body,p->body_len,&cache_buf[search_len],cache_len-search_len);
+		recv_total_len+=(cache_len-search_len);
+	}
+	//接收返回来的内容
+	while(g_webplay_ing)
+	{
+		recv_len=zhSockRecv(recv_buf,sizeof(recv_buf));
+		if(recv_len>0)
+		{
+			spiRamFifoWrite(recv_buf,recv_len);
+			p->pfCallback(ezhWebPlayGetData,p->host,p->port,p->file,p->parameter,p->body,p->body_len,recv_buf,recv_len);
+			recv_total_len+=recv_len;
+		}
+		else if(0==recv_len)
+		{
+			p->pfCallback(ezhWebPlayFinish,p->host,p->port,p->file,p->parameter,p->body,p->body_len,NULL,0);
+			goto _end;
+		}
+		else if(-1==recv_len)
+		{
+			p->pfCallback(ezhWebPlayFinish,p->host,p->port,p->file,p->parameter,p->body,p->body_len,NULL,0);
+			goto _end;
+		}
+		//接收已经完成
+		if(doc_total_len>0 && recv_total_len>=doc_total_len)
+		{
+			p->pfCallback(ezhWebPlayFinish,p->host,p->port,p->file,p->parameter,p->body,p->body_len,NULL,0);
+			break;
+		}
+	}
+_end:
+	zhSockClose();
+	//清空所有内容
+	spiRamFifoFree();
+	if(p->body)
+	{
+		free(p->body);
+		p->body=NULL;
+	}
+
+}
+
+bool webPlayHttpGet(const char*szUrl,WEBPLAY_DATA_CB* pfCallback)
+{
+	TzhHttpThread* threadParm;
+	bool ret;
+	threadParm=(TzhHttpThread*)malloc(sizeof(TzhHttpThread));
+	memset(threadParm,0,sizeof(TzhHttpThread));
+	//解析参数
+	ret=zhHttpUrlSplit(szUrl,threadParm->host,&threadParm->port,threadParm->file,threadParm->parameter);
+	threadParm->method=1;
+	threadParm->body=NULL;
+	threadParm->body_len=0;
+	threadParm->beginByte=0;
+	threadParm->pfCallback=pfCallback;
+	//
+	webPlayHttpThread_Data(threadParm);
+	//	
+	free(threadParm);
+	threadParm=NULL;
+	return ret;
+}
+
+void webplay_begin_mp3(const char*szUrl,WEBPLAY_DATA_CB* pfCallback)
+{
+	if(g_webplay_ing)
+	{
+		ESP_LOGI(TAG,"webplay_begin_mp3 . g_webplay_ing is true");
+		return;
+	}
+	spiRamFifoFree();
+	g_webplay_ing=true;
+	webPlayHttpGet(szUrl,pfCallback);
 }
 void webplay_task_mp3()
 {
     spiRamFifoInit();
 	while(1)
-	if(spiRamFifoFill()>1024)
+	if(spiRamFifoFill()>1024 && g_webplay_ing)
 	{
 			//
 			ESP_LOGI(TAG,"start to decode . spiRAM mp3");
@@ -88,13 +299,13 @@ void webplay_task_mp3()
 			bytesLeft=totalByte-read_pos;
 			memmove(readBuf, cacheReadBuf+nserepos, bytesLeft);
 			ESP_LOGE(TAG,"nserepos=%d totalByte=%d read_pos=%d ",nserepos,totalByte,read_pos);
-			while ( g_webplay_ing)
+			while (1)
 			{
-				if (bytesLeft < MAINBUF_SIZE)
+				if (g_webplay_ing && bytesLeft < MAINBUF_SIZE)
 				{
 						if(bytesLeft>0)
 						{
-							memmove(readBuf, readPtr, bytesLeft);	//鍓╀綑瀛楄妭鍐呭
+							memmove(readBuf, readPtr, bytesLeft);
 						}
 
 						int br =spiRamFifoFill()>(MAINBUF_SIZE - bytesLeft)?(MAINBUF_SIZE - bytesLeft):spiRamFifoFill();
@@ -104,12 +315,17 @@ void webplay_task_mp3()
 						bytesLeft = bytesLeft + br;
 						readPtr = readBuf;
 				}
+				else
+				{	
+					//清空播放缓存
+					bytesLeft=0;
+				}
 				int offset = MP3FindSyncWord(readPtr, bytesLeft);
 				if (offset < 0)
 				{  
 						 ESP_LOGE(TAG,"MP3FindSyncWord not find");
 						 bytesLeft=0;
-						 if(notfind_err_count>100)
+						 if(notfind_err_count>10)
 						 {
 							break;
 						 }
@@ -123,8 +339,13 @@ void webplay_task_mp3()
 					int errs = MP3Decode(hMP3Decoder, &readPtr, &bytesLeft, output, 0);
 					if (errs != 0)
 					{
-							ESP_LOGE(TAG,"MP3Decode failed ,code is %d ",errs);
+						ESP_LOGE(TAG,"MP3Decode failed ,code is %d ",errs);
+						if(notfind_err_count>10) //防止缓冲流不够解码失败退出
+						{
 							break;
+						}
+						notfind_err_count++;
+						continue;
 					}
 					MP3GetLastFrameInfo(hMP3Decoder, &mp3FrameInfo);
 					if(samplerate!=mp3FrameInfo.samprate)
@@ -151,6 +372,8 @@ ESP_LOGI(TAG,"mp3file info---bitrate=%d, bitsPerSample =%d,layer=%d,nChans=%d,sa
 
 		ESP_LOGI(TAG,"end mp3 decode ..");
 		g_webplay_ing=false;
+		//清空所有内容
+		spiRamFifoFree();
 	}
 	else
 	{
@@ -161,14 +384,14 @@ ESP_LOGI(TAG,"mp3file info---bitrate=%d, bitsPerSample =%d,layer=%d,nChans=%d,sa
 	vTaskDelete(NULL);
 }
 
-void webplay_push_data(char*buf,int len)
+bool webplay_stop_mp3()
 {
-	spiRamFifoWrite(buf,len);
-}
-void webplay_stop_mp3()
-{
-	spiRamFifoFree();
-	g_webplay_ing=false;
-	vTaskDelay(400 / portTICK_PERIOD_MS);
+	if(g_webplay_ing)
+	{
+		g_webplay_ing=false;
+		vTaskDelay(1000 / portTICK_PERIOD_MS);
+		return true;
+	}
+	return false;
 }
 
